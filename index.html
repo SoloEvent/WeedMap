@@ -184,10 +184,10 @@
                 <div>Loading Map...</div>
             </div>
             <div class="map-container" id="satelliteMap" style="display: none;">
-                <img src="assets/sat.jpg" alt="Satellite Map" class="map-image" id="satImage">
+                <img src="https://r2.fivemanage.com/WFJUnztU6NFDzltrV7jCl/GTAV-HD-MAP-satellite.jpg" alt="Satellite Map" class="map-image" id="satImage">
             </div>
             <div class="map-container" id="atlasMap" style="display: none;">
-                <img src="assets/atlas.png" alt="Atlas Map" class="map-image" id="atlasImage">
+                <img src="https://r2.fivemanage.com/WFJUnztU6NFDzltrV7jCl/GTAV_ATLUS_2048x2048.png" alt="Atlas Map" class="map-image" id="atlasImage">
             </div>
         </div>
 
@@ -245,11 +245,11 @@
         atlasImage.onload = imageLoaded;
 
         satImage.onerror = () => {
-            loading.innerHTML = '<div>Error loading satellite map.<br>Please check assets/sat.jpg</div>';
+            loading.innerHTML = '<div>Error loading satellite map.<br>Please check your internet connection.</div>';
         };
 
         atlasImage.onerror = () => {
-            loading.innerHTML = '<div>Error loading atlas map.<br>Please check assets/atlas.png</div>';
+            loading.innerHTML = '<div>Error loading atlas map.<br>Please check your internet connection.</div>';
         };
 
         function switchMap(mapType) {
