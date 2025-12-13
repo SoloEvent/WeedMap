@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTA V Map Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1a1a1a;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .map-viewer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            cursor: grab;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .map-viewer:active {
+            cursor: grabbing;
+        }
+
+        .map-container {
+            position: absolute;
+            transition: opacity 0.3s ease;
+        }
+
+        .map-image {
+            display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border: 2px solid #4CAF50;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            backdrop-filter: blur(10px);
+        }
+
+        .toggle-btn:hover {
+            background: rgba(76, 175, 80, 0.3);
+            transform: scale(1.05);
+        }
+
+        .toggle-btn.active {
+            background: #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .zoom-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .zoom-btn {
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border: 2px solid #2196F3;
+            padding: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .zoom-btn:hover {
+            background: rgba(33, 150, 243, 0.3);
+            transform: scale(1.05);
+        }
+
+        .reset-btn {
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border: 2px solid #FF9800;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 152, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: #4CAF50;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="map-viewer" id="mapViewer">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div>Loading Map...</div>
+            </div>
+            <div class="map-container" id="satelliteMap" style="display: none;">
+                <img src="assets/sat.jpg" alt="Satellite Map" class="map-image" id="satImage">
+            </div>
+            <div class="map-container" id="atlasMap" style="display: none;">
+                <img src="assets/atlas.jpg" alt="Atlas Map" class="map-image" id="atlasImage">
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="toggle-btn active" id="satelliteBtn" onclick="switchMap('satellite')">
+                Satellite
+            </button>
+            <button class="toggle-btn" id="atlasBtn" onclick="switchMap('atlas')">
+                Atlas
+            </button>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoom(0.2)">+</button>
+                <button class="zoom-btn" onclick="zoom(-0.2)">−</button>
+            </div>
+            <button class="reset-btn" onclick="resetView()">Reset View</button>
+        </div>
+
+        <div class="info">
+            <div class="info-title">Controls</div>
+            <div>🖱️ Click & Drag to pan</div>
+            <div>🔍 Use +/− to zoom</div>
+            <div>🔄 Toggle between map views</div>
+        </div>
+    </div>
+
+    <script>
+        let currentMap = 'satellite';
+        let scale = 1;
+        let panning = false;
+        let pointX = 0;
+        let pointY = 0;
+        let start = { x: 0, y: 0 };
+
+        const mapViewer = document.getElementById('mapViewer');
+        const satelliteMap = document.getElementById('satelliteMap');
+        const atlasMap = document.getElementById('atlasMap');
+        const loading = document.getElementById('loading');
+        const satImage = document.getElementById('satImage');
+        const atlasImage = document.getElementById('atlasImage');
+
+        // Image loading
+        let imagesLoaded = 0;
+        const totalImages = 2;
+
+        function imageLoaded() {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+                loading.style.display = 'none';
+                satelliteMap.style.display = 'block';
+                centerMap();
+            }
+        }
+
+        satImage.onload = imageLoaded;
+        atlasImage.onload = imageLoaded;
+
+        satImage.onerror = () => {
+            loading.innerHTML = '<div>Error loading satellite map.<br>Please check assets/sat.jpg</div>';
+        };
+
+        atlasImage.onerror = () => {
+            loading.innerHTML = '<div>Error loading atlas map.<br>Please check assets/atlas.jpg</div>';
+        };
+
+        function switchMap(mapType) {
+            currentMap = mapType;
+            
+            if (mapType === 'satellite') {
+                satelliteMap.style.opacity = '1';
+                atlasMap.style.opacity = '0';
+                setTimeout(() => {
+                    satelliteMap.style.display = 'block';
+                    atlasMap.style.display = 'none';
+                }, 300);
+                document.getElementById('satelliteBtn').classList.add('active');
+                document.getElementById('atlasBtn').classList.remove('active');
+            } else {
+                atlasMap.style.opacity = '1';
+                satelliteMap.style.opacity = '0';
+                setTimeout(() => {
+                    atlasMap.style.display = 'block';
+                    satelliteMap.style.display = 'none';
+                }, 300);
+                document.getElementById('atlasBtn').classList.add('active');
+                document.getElementById('satelliteBtn').classList.remove('active');
+            }
+        }
+
+        function setTransform() {
+            const currentMapElement = currentMap === 'satellite' ? satelliteMap : atlasMap;
+            currentMapElement.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+        }
+
+        function centerMap() {
+            const img = currentMap === 'satellite' ? satImage : atlasImage;
+            const viewerRect = mapViewer.getBoundingClientRect();
+            
+            pointX = (viewerRect.width - img.width) / 2;
+            pointY = (viewerRect.height - img.height) / 2;
+            
+            setTransform();
+        }
+
+        function zoom(delta) {
+            const oldScale = scale;
+            scale += delta;
+            scale = Math.min(Math.max(0.5, scale), 4);
+            
+            const scaleChange = scale / oldScale;
+            
+            const viewerRect = mapViewer.getBoundingClientRect();
+            const centerX = viewerRect.width / 2;
+            const centerY = viewerRect.height / 2;
+            
+            pointX = centerX - (centerX - pointX) * scaleChange;
+            pointY = centerY - (centerY - pointY) * scaleChange;
+            
+            setTransform();
+        }
+
+        function resetView() {
+            scale = 1;
+            centerMap();
+        }
+
+        // Mouse events
+        mapViewer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            start = { x: e.clientX - pointX, y: e.clientY - pointY };
+            panning = true;
+        });
+
+        mapViewer.addEventListener('mousemove', (e) => {
+            e.preventDefault();
+            if (!panning) return;
+            
+            pointX = e.clientX - start.x;
+            pointY = e.clientY - start.y;
+            setTransform();
+        });
+
+        mapViewer.addEventListener('mouseup', () => {
+            panning = false;
+        });
+
+        mapViewer.addEventListener('mouseleave', () => {
+            panning = false;
+        });
+
+        // Touch events for mobile
+        mapViewer.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            start = { x: touch.clientX - pointX, y: touch.clientY - pointY };
+            panning = true;
+        });
+
+        mapViewer.addEventListener('touchmove', (e) => {
+            if (!panning) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            pointX = touch.clientX - start.x;
+            pointY = touch.clientY - start.y;
+            setTransform();
+        });
+
+        mapViewer.addEventListener('touchend', () => {
+            panning = false;
+        });
+
+        // Mouse wheel zoom
+        mapViewer.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            zoom(delta);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '+' || e.key === '=') {
+                zoom(0.2);
+            } else if (e.key === '-' || e.key === '_') {
+                zoom(-0.2);
+            } else if (e.key === '0') {
+                resetView();
+            } else if (e.key === '1') {
+                switchMap('satellite');
+            } else if (e.key === '2') {
+                switchMap('atlas');
+            }
+        });
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            centerMap();
+        });
+    </script>
+</body>
+</html>
