@@ -187,7 +187,7 @@
                 <img src="assets/sat.jpg" alt="Satellite Map" class="map-image" id="satImage">
             </div>
             <div class="map-container" id="atlasMap" style="display: none;">
-                <img src="assets/atlas.jpg" alt="Atlas Map" class="map-image" id="atlasImage">
+                <img src="assets/atlas.png" alt="Atlas Map" class="map-image" id="atlasImage">
             </div>
         </div>
 
@@ -249,7 +249,7 @@
         };
 
         atlasImage.onerror = () => {
-            loading.innerHTML = '<div>Error loading atlas map.<br>Please check assets/atlas.jpg</div>';
+            loading.innerHTML = '<div>Error loading atlas map.<br>Please check assets/atlas.png</div>';
         };
 
         function switchMap(mapType) {
