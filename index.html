@@ -16,6 +16,12 @@
             background: #1a1a1a;
             overflow: hidden;
             height: 100vh;
+            position: fixed;
+            width: 100%;
+        }
+        
+        html {
+            overflow: hidden;
         }
 
         .container {
@@ -309,7 +315,7 @@
         }
 
         function resetView() {
-            scale = 1;
+            scale = 0.5;
             centerMap();
         }
 
@@ -358,12 +364,25 @@
             panning = false;
         });
 
-        // Mouse wheel zoom
+        // Mouse wheel zoom - prevent all scrolling, only zoom
         mapViewer.addEventListener('wheel', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             const delta = e.deltaY > 0 ? -0.1 : 0.1;
             zoom(delta);
-        });
+        }, { passive: false });
+
+        // Prevent scrolling on the entire document
+        document.addEventListener('wheel', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.target === mapViewer || mapViewer.contains(e.target)) {
+                return;
+            }
+            e.preventDefault();
+        }, { passive: false });
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
