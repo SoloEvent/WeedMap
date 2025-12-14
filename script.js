@@ -8,10 +8,10 @@ let markerMode = false;
 let markerIdCounter = 1;
 
 // ============================================
-// # PUT COORDS HERE (paste between the brackets)
+// # PUT COORDS HERE FUCKFACE
 // ============================================
 const permanentMarkers = [
-    // Example: { x: 1234, y: 5678, label: "Weed Farm North" },
+    // Example: { x: 1234, y: 5678, label: "Weed Farm Fuckass" },
     { x: 2355, y: 3780, label: "Weed Location #1" },
     { x: 6137, y: 3115, label: "Weed Location #2" },
     { x: 2472, y: 3666, label: "Weed Location #3" },
@@ -27,7 +27,6 @@ const markersContainer = document.getElementById('markersContainer');
 const markerNotice = document.getElementById('markerNotice');
 const locationsList = document.getElementById('locationsList');
 
-/* ---------- IMAGE LOAD ---------- */
 let loaded = 0;
 function imageLoaded() {
     loaded++;
@@ -41,37 +40,31 @@ function imageLoaded() {
 }
 satImage.onload = imageLoaded;
 
-/* ---------- TRANSFORM ---------- */
 function setTransform() {
     const t = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
     satelliteMap.style.transform = t;
     markersContainer.style.transform = t;
 }
 
-/* ---------- CENTER ---------- */
 function centerMap() {
     const rect = mapViewer.getBoundingClientRect();
-
     pointX = (rect.width - satImage.width * scale) / 2;
     pointY = (rect.height - satImage.height * scale) / 2;
     setTransform();
 }
 
-/* ---------- PERFECT ZOOM ---------- */
 function zoom(delta, mouseX, mouseY) {
     const oldScale = scale;
     scale = Math.min(Math.max(0.5, scale + delta), 4);
     if (scale === oldScale) return;
 
     const ratio = scale / oldScale;
-
     pointX = mouseX - ratio * (mouseX - pointX);
     pointY = mouseY - ratio * (mouseY - pointY);
 
     setTransform();
 }
 
-/* ---------- WHEEL (FIXED) ---------- */
 mapViewer.addEventListener('wheel', (e) => {
     e.preventDefault();
 
@@ -83,17 +76,14 @@ mapViewer.addEventListener('wheel', (e) => {
     zoom(delta, mouseX, mouseY);
 }, { passive: false });
 
-/* ---------- PAN ---------- */
 mapViewer.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return; // Only left click
+    if (e.button !== 0) return;
     
-    // If in marker mode, place a marker
     if (markerMode) {
         const rect = mapViewer.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
         
-        // Calculate actual coordinates on the image
         const x = (mouseX - pointX) / scale;
         const y = (mouseY - pointY) / scale;
         
@@ -103,7 +93,6 @@ mapViewer.addEventListener('mousedown', (e) => {
             createMarker(x, y, label, false);
             const coordString = `{ x: ${Math.round(x)}, y: ${Math.round(y)}, label: "${label}" },`;
             
-            // Copy to clipboard
             navigator.clipboard.writeText(coordString).then(() => {
                 console.log('✅ Coordinates copied to clipboard!');
                 console.log(coordString);
@@ -112,7 +101,6 @@ mapViewer.addEventListener('mousedown', (e) => {
                 console.log('⚠️ Copy this manually:', coordString);
             });
             
-            // Auto-untoggle marker mode
             toggleMarkerMode();
         }
         return;
@@ -132,7 +120,6 @@ mapViewer.addEventListener('mousemove', (e) => {
 mapViewer.addEventListener('mouseup', () => panning = false);
 mapViewer.addEventListener('mouseleave', () => panning = false);
 
-/* ---------- MARKERS ---------- */
 function toggleMarkerMode() {
     markerMode = !markerMode;
     markerNotice.style.display = markerMode ? 'block' : 'none';
@@ -177,19 +164,18 @@ function updateLocationsList() {
 }
 
 function navigateToLocation(x, y) {
-    // Set zoom to a good viewing level
     scale = 2.0;
-    
-    // Center on the marker
     const rect = mapViewer.getBoundingClientRect();
     pointX = rect.width / 2 - x * scale;
     pointY = rect.height / 2 - y * scale;
-    
     setTransform();
 }
 
-/* ---------- RESET ---------- */
 function resetView() {
     scale = 0.5;
     centerMap();
 }
+
+window.addEventListener('resize', () => {
+    centerMap();
+});
