@@ -96,7 +96,7 @@ mapViewer.addEventListener('mousedown', (e) => {
             navigator.clipboard.writeText(coordString).then(() => {
                 console.log('✅ Coordinates copied to clipboard!');
                 console.log(coordString);
-                alert('Coordinates copied! Paste in script.js under "# PUT COORDS HERE" then refresh to see it in the list.');
+                alert('Coordinates copied! Paste into Barbers DMs for it to be added');
             }).catch(err => {
                 console.log('⚠️ Copy this manually:', coordString);
             });
