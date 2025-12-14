@@ -12,59 +12,48 @@ let markerIdCounter = 1;
 // ============================================
 const permanentMarkers = [
     // Example: { x: 1234, y: 5678, label: "Weed Farm North" },
-    { x: 2372, y: 3791, label: "Weed Location #1" },
+    { x: 2355, y: 3780, label: "Weed Location #1" },
+    { x: 6137, y: 3115, label: "Weed Location #2" },
+    { x: 2472, y: 3666, label: "Weed Location #3" },
+    { x: 4871, y: 5940, label: "Weed Location #4" },
 ];
 // ============================================
 
 const mapViewer = document.getElementById('mapViewer');
 const satelliteMap = document.getElementById('satelliteMap');
-const atlasMap = document.getElementById('atlasMap');
 const loading = document.getElementById('loading');
 const satImage = document.getElementById('satImage');
-const atlasImage = document.getElementById('atlasImage');
 const markersContainer = document.getElementById('markersContainer');
 const markerNotice = document.getElementById('markerNotice');
+const locationsList = document.getElementById('locationsList');
 
 /* ---------- IMAGE LOAD ---------- */
 let loaded = 0;
 function imageLoaded() {
     loaded++;
-    if (loaded === 2) {
+    if (loaded === 1) {
         loading.style.display = 'none';
         satelliteMap.style.display = 'block';
         centerMap();
         loadPermanentMarkers();
+        updateLocationsList();
     }
 }
 satImage.onload = imageLoaded;
-atlasImage.onload = imageLoaded;
-
-/* ---------- MAP SWITCH ---------- */
-function switchMap(type) {
-    currentMap = type;
-    satelliteMap.style.display = type === 'satellite' ? 'block' : 'none';
-    atlasMap.style.display = type === 'atlas' ? 'block' : 'none';
-    
-    // Update button states
-    document.getElementById('satelliteBtn').classList.toggle('active', type === 'satellite');
-    document.getElementById('atlasBtn').classList.toggle('active', type === 'atlas');
-}
 
 /* ---------- TRANSFORM ---------- */
 function setTransform() {
     const t = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
     satelliteMap.style.transform = t;
-    atlasMap.style.transform = t;
     markersContainer.style.transform = t;
 }
 
 /* ---------- CENTER ---------- */
 function centerMap() {
-    const img = currentMap === 'satellite' ? satImage : atlasImage;
     const rect = mapViewer.getBoundingClientRect();
 
-    pointX = (rect.width - img.width * scale) / 2;
-    pointY = (rect.height - img.height * scale) / 2;
+    pointX = (rect.width - satImage.width * scale) / 2;
+    pointY = (rect.height - satImage.height * scale) / 2;
     setTransform();
 }
 
@@ -118,7 +107,7 @@ mapViewer.addEventListener('mousedown', (e) => {
             navigator.clipboard.writeText(coordString).then(() => {
                 console.log('✅ Coordinates copied to clipboard!');
                 console.log(coordString);
-                alert('Coordinates copied! Paste in script.js under "# PUT COORDS HERE"');
+                alert('Coordinates copied! Paste in script.js under "# PUT COORDS HERE" then refresh to see it in the list.');
             }).catch(err => {
                 console.log('⚠️ Copy this manually:', coordString);
             });
@@ -168,6 +157,35 @@ function createMarker(x, y, label, permanent = false) {
 
 function loadPermanentMarkers() {
     permanentMarkers.forEach(m => createMarker(m.x, m.y, m.label, true));
+}
+
+function updateLocationsList() {
+    locationsList.innerHTML = '';
+    
+    if (permanentMarkers.length === 0) {
+        locationsList.innerHTML = '<div class="no-locations">No locations saved yet</div>';
+        return;
+    }
+    
+    permanentMarkers.forEach((marker, index) => {
+        const item = document.createElement('div');
+        item.className = 'location-item';
+        item.textContent = marker.label;
+        item.onclick = () => navigateToLocation(marker.x, marker.y);
+        locationsList.appendChild(item);
+    });
+}
+
+function navigateToLocation(x, y) {
+    // Set zoom to a good viewing level
+    scale = 2.0;
+    
+    // Center on the marker
+    const rect = mapViewer.getBoundingClientRect();
+    pointX = rect.width / 2 - x * scale;
+    pointY = rect.height / 2 - y * scale;
+    
+    setTransform();
 }
 
 /* ---------- RESET ---------- */

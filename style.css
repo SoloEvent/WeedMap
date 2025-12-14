@@ -90,29 +90,76 @@ body {
     gap: 10px;
 }
 
-.toggle-btn {
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
+.locations-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.9);
     border: 2px solid #4CAF50;
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
     border-radius: 8px;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    padding: 15px;
+    max-width: 250px;
+    max-height: 400px;
+    overflow-y: auto;
     backdrop-filter: blur(10px);
 }
 
-.toggle-btn:hover {
-    background: rgba(76, 175, 80, 0.3);
-    transform: scale(1.05);
+.locations-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-bottom: 10px;
+    text-align: center;
 }
 
-.toggle-btn.active {
+.locations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.location-item {
+    background: rgba(76, 175, 80, 0.2);
+    border: 1px solid #4CAF50;
+    border-radius: 6px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #fff;
+    font-size: 14px;
+}
+
+.location-item:hover {
+    background: rgba(76, 175, 80, 0.4);
+    transform: translateX(5px);
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+}
+
+.no-locations {
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+    text-align: center;
+    padding: 10px;
+    font-size: 14px;
+}
+
+.locations-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.locations-panel::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+
+.locations-panel::-webkit-scrollbar-thumb {
     background: #4CAF50;
-    box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+    border-radius: 4px;
+}
+
+.locations-panel::-webkit-scrollbar-thumb:hover {
+    background: #45a049;
 }
 
 .reset-btn {

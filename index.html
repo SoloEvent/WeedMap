@@ -16,21 +16,19 @@
             <div class="map-container" id="satelliteMap" style="display: none;">
                 <img src="https://r2.fivemanage.com/WFJUnztU6NFDzltrV7jCl/GTAV-HD-MAP-satellite.jpg" alt="Satellite Map" class="map-image" id="satImage">
             </div>
-            <div class="map-container" id="atlasMap" style="display: none;">
-                <img src="https://r2.fivemanage.com/WFJUnztU6NFDzltrV7jCl/GTAV_ATLUS_2048x2048.png" alt="Atlas Map" class="map-image" id="atlasImage">
-            </div>
             <div class="markers-container" id="markersContainer"></div>
         </div>
 
         <div class="controls">
-            <button class="toggle-btn active" id="satelliteBtn" onclick="switchMap('satellite')">
-                Satellite
-            </button>
-            <button class="toggle-btn" id="atlasBtn" onclick="switchMap('atlas')">
-                Atlas
-            </button>
             <button class="reset-btn" onclick="resetView()">Reset View</button>
             <button class="marker-btn" id="markerBtn" onclick="toggleMarkerMode()">📍 Add Marker</button>
+        </div>
+
+        <div class="locations-panel" id="locationsPanel">
+            <div class="locations-title">🌿 Weed Locations</div>
+            <div class="locations-list" id="locationsList">
+                <div class="no-locations">No locations saved yet</div>
+            </div>
         </div>
 
         <div class="temp-marker-notice" id="markerNotice">
@@ -41,9 +39,9 @@
             <div class="info-title">Controls</div>
             <div>🖱️ Click & Drag to pan</div>
             <div>🔍 Scroll wheel to zoom at cursor</div>
-            <div>🔄 Toggle between map views</div>
             <div>📍 Add temporary markers</div>
             <div>🌿 Right-click marker to remove</div>
+            <div>📋 Click location to jump to it</div>
         </div>
     </div>
 
