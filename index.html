@@ -136,6 +136,90 @@
             transform: scale(1.05);
         }
 
+        .marker-btn {
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border: 2px solid #4CAF50;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .marker-btn:hover {
+            background: rgba(76, 175, 80, 0.3);
+            transform: scale(1.05);
+        }
+
+        .marker-btn.active {
+            background: #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .marker {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: transform 0.2s ease;
+            z-index: 50;
+        }
+
+        .marker:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        .marker-icon {
+            width: 100%;
+            height: 100%;
+            background: #4CAF50;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .marker-label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #4CAF50;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            border: 1px solid #4CAF50;
+        }
+
+        .marker:hover .marker-label {
+            opacity: 1;
+        }
+
+        .temp-marker-notice {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            background: rgba(76, 175, 80, 0.9);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            backdrop-filter: blur(10px);
+            border: 2px solid #4CAF50;
+            display: none;
+        }
+
         .info {
             position: absolute;
             bottom: 20px;
@@ -195,6 +279,7 @@
             <div class="map-container" id="atlasMap" style="display: none;">
                 <img src="https://r2.fivemanage.com/WFJUnztU6NFDzltrV7jCl/GTAV_ATLUS_2048x2048.png" alt="Atlas Map" class="map-image" id="atlasImage">
             </div>
+            <div class="markers-container" id="markersContainer"></div>
         </div>
 
         <div class="controls">
@@ -209,13 +294,20 @@
                 <button class="zoom-btn" onclick="zoom(-0.2)">−</button>
             </div>
             <button class="reset-btn" onclick="resetView()">Reset View</button>
+            <button class="marker-btn" id="markerBtn" onclick="toggleMarkerMode()">📍 Add Marker</button>
+        </div>
+
+        <div class="temp-marker-notice" id="markerNotice">
+            Click on the map to add weed location
         </div>
 
         <div class="info">
             <div class="info-title">Controls</div>
             <div>🖱️ Click & Drag to pan</div>
-            <div>🔍 Use +/− to zoom</div>
+            <div>🔍 Scroll wheel to zoom</div>
             <div>🔄 Toggle between map views</div>
+            <div>📍 Add temporary markers</div>
+            <div>🌿 Right-click marker to remove</div>
         </div>
     </div>
 
@@ -226,6 +318,14 @@
         let pointX = 0;
         let pointY = 0;
         let start = { x: 0, y: 0 };
+        let markerMode = false;
+        let markerIdCounter = 1;
+
+        // PERMANENT MARKERS - Edit this array to add/remove weed locations
+        const permanentMarkers = [
+            // Example: { x: 500, y: 600, label: "Weed Farm #1" },
+            // Add your markers here in format: { x: pixelX, y: pixelY, label: "Location Name" }
+        ];
 
         const mapViewer = document.getElementById('mapViewer');
         const satelliteMap = document.getElementById('satelliteMap');
@@ -233,6 +333,8 @@
         const loading = document.getElementById('loading');
         const satImage = document.getElementById('satImage');
         const atlasImage = document.getElementById('atlasImage');
+        const markersContainer = document.getElementById('markersContainer');
+        const markerNotice = document.getElementById('markerNotice');
 
         // Image loading
         let imagesLoaded = 0;
@@ -244,6 +346,7 @@
                 loading.style.display = 'none';
                 satelliteMap.style.display = 'block';
                 centerMap();
+                loadPermanentMarkers();
             }
         }
 
@@ -297,19 +400,28 @@
             setTransform();
         }
 
-        function zoom(delta) {
+        function zoom(delta, mouseX, mouseY) {
             const oldScale = scale;
             scale += delta;
             scale = Math.min(Math.max(0.5, scale), 4);
             
+            if (scale === oldScale) return; // Don't update if scale didn't change
+            
             const scaleChange = scale / oldScale;
             
-            const viewerRect = mapViewer.getBoundingClientRect();
-            const centerX = viewerRect.width / 2;
-            const centerY = viewerRect.height / 2;
-            
-            pointX = centerX - (centerX - pointX) * scaleChange;
-            pointY = centerY - (centerY - pointY) * scaleChange;
+            // If mouse position is provided, zoom towards it
+            if (mouseX !== undefined && mouseY !== undefined) {
+                pointX = mouseX - (mouseX - pointX) * scaleChange;
+                pointY = mouseY - (mouseY - pointY) * scaleChange;
+            } else {
+                // Otherwise zoom towards center
+                const viewerRect = mapViewer.getBoundingClientRect();
+                const centerX = viewerRect.width / 2;
+                const centerY = viewerRect.height / 2;
+                
+                pointX = centerX - (centerX - pointX) * scaleChange;
+                pointY = centerY - (centerY - pointY) * scaleChange;
+            }
             
             setTransform();
         }
@@ -319,9 +431,89 @@
             centerMap();
         }
 
+        function toggleMarkerMode() {
+            markerMode = !markerMode;
+            const markerBtn = document.getElementById('markerBtn');
+            
+            if (markerMode) {
+                markerBtn.classList.add('active');
+                markerNotice.style.display = 'block';
+                mapViewer.style.cursor = 'crosshair';
+            } else {
+                markerBtn.classList.remove('active');
+                markerNotice.style.display = 'none';
+                mapViewer.style.cursor = 'grab';
+            }
+        }
+
+        function createMarker(x, y, label, isPermanent = false) {
+            const marker = document.createElement('div');
+            marker.className = 'marker';
+            marker.style.left = x + 'px';
+            marker.style.top = y + 'px';
+            
+            if (!isPermanent) {
+                marker.id = 'temp-marker-' + markerIdCounter++;
+            }
+            
+            marker.innerHTML = `
+                <div class="marker-icon">🌿</div>
+                <div class="marker-label">${label}</div>
+            `;
+            
+            // Right click to remove temp markers
+            if (!isPermanent) {
+                marker.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    marker.remove();
+                    console.log('Temporary marker removed');
+                });
+            }
+            
+            // Click to log coordinates for permanent addition
+            marker.addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log(`Marker "${label}" at coordinates: { x: ${Math.round(x)}, y: ${Math.round(y)}, label: "${label}" }`);
+                console.log('Copy this line to permanentMarkers array to make it permanent!');
+            });
+            
+            markersContainer.appendChild(marker);
+            return marker;
+        }
+
+        function loadPermanentMarkers() {
+            permanentMarkers.forEach(markerData => {
+                createMarker(markerData.x, markerData.y, markerData.label, true);
+            });
+        }
+
+        function getMapCoordinates(clientX, clientY) {
+            const currentMapElement = currentMap === 'satellite' ? satelliteMap : atlasMap;
+            const rect = currentMapElement.getBoundingClientRect();
+            
+            // Calculate position relative to the map image
+            const x = (clientX - rect.left) / scale;
+            const y = (clientY - rect.top) / scale;
+            
+            return { x, y };
+        }
+
         // Mouse events
         mapViewer.addEventListener('mousedown', (e) => {
             e.preventDefault();
+            
+            // If in marker mode, place a marker
+            if (markerMode && e.target === mapViewer) {
+                const coords = getMapCoordinates(e.clientX, e.clientY);
+                const label = prompt('Enter location name:', 'Weed Location #' + markerIdCounter);
+                
+                if (label) {
+                    createMarker(coords.x, coords.y, label, false);
+                    console.log(`Add this to permanentMarkers array: { x: ${Math.round(coords.x)}, y: ${Math.round(coords.y)}, label: "${label}" },`);
+                }
+                return;
+            }
+            
             start = { x: e.clientX - pointX, y: e.clientY - pointY };
             panning = true;
         });
@@ -337,10 +529,12 @@
 
         mapViewer.addEventListener('mouseup', () => {
             panning = false;
+            mapViewer.style.cursor = markerMode ? 'crosshair' : 'grab';
         });
 
         mapViewer.addEventListener('mouseleave', () => {
             panning = false;
+            mapViewer.style.cursor = markerMode ? 'crosshair' : 'grab';
         });
 
         // Touch events for mobile
@@ -369,7 +563,7 @@
             e.preventDefault();
             e.stopPropagation();
             const delta = e.deltaY > 0 ? -0.1 : 0.1;
-            zoom(delta);
+            zoom(delta, e.clientX, e.clientY);
         }, { passive: false });
 
         // Prevent scrolling on the entire document
